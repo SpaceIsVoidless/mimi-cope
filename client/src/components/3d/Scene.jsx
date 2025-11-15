@@ -134,7 +134,7 @@ function Scene({ data, currentStep }) {
       {relationships.map((rel, index) => (
         <Relationship key={index} data={rel} objects={objects} />
       ))}
-      <mesh position={[0, -0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={[0, -10, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[500, 500]} />
         <meshStandardMaterial color="#ADD8E6" />
       </mesh>
