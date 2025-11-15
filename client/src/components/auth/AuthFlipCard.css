@@ -1,0 +1,91 @@
+/* 3D Flip Card Container */
+.flip-card-container {
+  width: 100%;
+  max-width: 440px;
+  perspective: 1000px;
+  position: relative;
+  height: fit-content;
+}
+
+/* Inner wrapper that actually flips */
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: auto;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+/* Flipped state */
+.flip-card-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+/* Both faces share these styles */
+.flip-card-face {
+  width: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  
+  /* Card styling */
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 28px;
+  padding: 40px;
+  box-shadow: 0 25px 70px rgba(30, 58, 82, 0.18);
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  
+  /* Ensure proper alignment */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Form inside the card face */
+.flip-card-face form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+/* Front face (login) - not flipped, shows by default */
+.flip-card-front {
+  position: relative;
+  transform: rotateY(0deg);
+}
+
+/* Back face (signup) - hidden behind, rotated 180deg */
+.flip-card-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotateY(180deg);
+}
+
+/* When flipped, hide the front face behind */
+.flip-card-inner.flipped .flip-card-front {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* When flipped, show the back face */
+.flip-card-inner.flipped .flip-card-back {
+  position: relative;
+}
+
+/* Responsive adjustments */
+@media (max-width: 899px) {
+  .flip-card-face {
+    padding: 32px;
+  }
+}
+
+/* Ensure smooth animations on mobile */
+@media (prefers-reduced-motion: reduce) {
+  .flip-card-inner {
+    transition: none;
+  }
+}

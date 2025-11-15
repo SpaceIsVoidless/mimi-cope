@@ -2,18 +2,22 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 require('dotenv').config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// CORRECTED MODEL NAME: Use the stable and reliable pro model
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
+// Stage 1: The prompt that creates the simple explanation
 const getStage1Prompt = (userInput) => `
   You are an expert educator for a K-12 student with neurodivergent needs.
   A user wants to understand: "${userInput}".
-  Your task is to write a simple, clear, and concise explanation using Markdown.
+  Your task is to write a simple, clear, and concise explanation of this concept using Markdown.
   Use short sentences, simple analogies, and bullet points or numbered lists if it helps.
-  This explanation will be shown to the user and will be used to generate a 3D visualization.
+  This explanation will be shown to the user and will also be used to generate a 3D visualization.
 `;
 
+// Stage 2: The Definitive "Master Prompt" that creates the JSON
 const getStage2Prompt = (explanation, userInput) => `
-  Based on the user's original request "${userInput}" and the following simple explanation, generate a structured JSON Scene Graph for our 3D renderer.
+  You are an AI assistant for Mimic, a 3D visualization tool for neurodivergent users.
+  Based on the user's original request "${userInput}" and the following simple explanation, generate a structured JSON Scene Graph.
   Your ONLY output must be a single JSON object.
 
   Explanation:
@@ -21,26 +25,55 @@ const getStage2Prompt = (explanation, userInput) => `
   ${explanation}
   ---
 
-  ### SECTION 1: VISUALIZING PHYSICAL OBJECTS & SCENES
-  This is your priority for prompts like "a car", "a snowman", "a table with an apple on it".
+  **CORE MISSION: INTERPRET THE MEANING OF THE EXPLANATION, NOT JUST THE WORDS.**
 
-  - **DECOMPOSITION:** You MUST break down complex objects into simpler component shapes. A 'car' is a box with cylinder wheels. A 'table' is a box with cylinder legs.
-  - **PARENTING:** Use the 'parent' property to connect parts. The 'position' of a child is relative to its parent's center.
-  - **PROPERTIES:** Every object needs: id, shape, color, position, size, label, and showLabel.
-  - **SIZE:** The 'size' property MUST ALWAYS be an array of three numbers: [width, height, depth].
-  - **ROTATION:** Use 'rotation' [x, y, z] in degrees for orientation.
-  - **LABELS:** For composite objects, set 'showLabel': true ONLY for the main parent object.
+  **JSON OUTPUT STRUCTURE:**
+  - Your entire output MUST be a single JSON object.
+  - It can have "objects", "relationships", and "sequence" arrays.
 
-  ### SECTION 2: VISUALIZING ABSTRACT CONCEPTS & PROCESSES
-  Use this for prompts like "supply and demand" or "the water cycle".
+  **RULES FOR "OBJECTS":**
+  1.  **Symbolize Abstracts:** For abstract concepts (e.g., 'supply', 'demand', 'fear'), you MUST represent them as simple, symbolic geometric shapes.
+  2.  **Decompose Physical:** For physical objects (e.g., 'car', 'snowman'), you MUST break them down into component parts using the 'parent' property.
+  3.  **Properties:** Every object needs: id, shape (lowercase), color, position, size, label, and showLabel.
+  4.  **Size Rule:** 'size' MUST ALWAYS be an array of three numbers: [width, height, depth].
+  5.  **Low Clutter:** Limit scenes to essential components.
 
-  - **SYMBOLIZE:** Represent abstract concepts as simple shapes.
-  - **RELATE:** Use the "relationships" array for non-sequential connections. A relationship needs: 'from', 'to', 'type', and 'label'.
-  - **SEQUENCE:** For processes, create a "sequence" array. Each step needs: "step", "label", "targetId", "action", and "params".
-  - **ACTION:** Must be one of: 'move', 'rotate', 'scale', 'changeColor', 'appear', 'disappear'.
-  - For 'appear'/'disappear', set the object's initial "visible" property to false.
+  **RULES FOR "RELATIONSHIPS":**
+  - Use this for conceptual connections (e.g., 'balances', 'opposes').
+  - A relationship object must have: 'from', 'to', 'type' ('line' or 'arrow'), and 'label'.
+
+  **RULES FOR "SEQUENCES":**
+  - If the explanation describes a step-by-step process (like "the water cycle" or building a snowman), you MUST generate a "sequence" array.
+  - Each step needs: "step", "label", "targetId", "action", and "params".
+
+  **EXAMPLE 1: ABSTRACT CONCEPT (from original prompt)**
+  USER PROMPT: "show me how supply balances demand"
+  YOUR OUTPUT:
+  {
+    "objects": [
+      { "id": "supply_obj", "shape": "sphere", "color": "royalblue", "position": [-4, 0, 0], "size": [2,2,2], "label": "Supply", "showLabel": true },
+      { "id": "demand_obj", "shape": "sphere", "color": "tomato", "position": [4, 0, 0], "size": [2,2,2], "label": "Demand", "showLabel": true }
+    ],
+    "relationships": [
+      { "from": "supply_obj", "to": "demand_obj", "type": "line", "label": "balances" }
+    ]
+  }
+
+  **EXAMPLE 2: PROCESS (new addition)**
+  USER PROMPT: "the water cycle"
+  (Based on a step-by-step explanation)
+  YOUR OUTPUT:
+  {
+    "objects": [
+      { "id": "ocean", "shape": "plane", "color": "blue", "position": [0,0,0], "size": [10,10,0.1], "label": "Ocean", "showLabel": true, "visible": true },
+      { "id": "vapor", "shape": "sphere", "color": "lightblue", "position": [0,0.5,0], "size": [0.5,0.5,0.5], "label": "Vapor", "showLabel": true, "visible": false }
+    ],
+    "sequence": [
+      { "step": 1, "label": "Evaporation", "targetId": "vapor", "action": "appear", "params": {} },
+      { "step": 2, "label": "Vapor rises", "targetId": "vapor", "action": "move", "params": { "position": [0, 4, 0] } }
+    ]
+  }
 `;
-
 
 const generateSceneJson = async (userInput) => {
   const maxRetries = 3;

@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import backgroundImage from '../assets/background.png';
 import logoImage from '../assets/logo.png';
+import AuthFlipCard from '../components/auth/AuthFlipCard';
+import '../styles/HomePage.css';
 
 export default function LandingPage() {
   // Color palette with #A7C7E7 base
@@ -16,9 +18,32 @@ export default function LandingPage() {
   const contactRef = useRef(null);
   const loginRef = useRef(null);
 
-  const [form, setForm] = useState({ id: '', password: '' });
-  const [focus, setFocus] = useState(null);
   const [isWide, setIsWide] = useState(typeof window !== 'undefined' ? window.innerWidth >= 900 : true);
+  const [titleAnimation, setTitleAnimation] = useState('');
+  const [titleTransform, setTitleTransform] = useState({ rotateX: 0, rotateY: 0 });
+
+  const handleTitleClick = () => {
+    setTitleAnimation('title-wobble');
+    setTimeout(() => setTitleAnimation(''), 1000);
+  };
+
+  const handleTitleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    // Calculate rotation based on mouse position
+    const rotateY = ((x - centerX) / centerX) * 15; // -15 to +15 degrees
+    const rotateX = ((centerY - y) / centerY) * 10; // -10 to +10 degrees
+    
+    setTitleTransform({ rotateX, rotateY });
+  };
+
+  const handleTitleMouseLeave = () => {
+    setTitleTransform({ rotateX: 0, rotateY: 0 });
+  };
 
   useEffect(() => {
     const onResize = () => setIsWide(window.innerWidth >= 900);
@@ -38,9 +63,6 @@ export default function LandingPage() {
 
   const scrollTo = (ref) => { if (ref?.current) ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
 
-  const handleChange = (e) => setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
-  const handleSubmit = (e) => { e.preventDefault(); console.log('login', form); };
-
   const styles = {
     root: { 
       fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif', 
@@ -54,7 +76,7 @@ export default function LandingPage() {
     nav: { 
       position: 'sticky', 
       top: 0, 
-      zIndex: 60, 
+      zIndex: 100, 
       background: `rgba(167, 199, 231, 0.85)`, 
       backdropFilter: 'blur(10px)', 
       borderBottom: 'none',
@@ -73,18 +95,18 @@ export default function LandingPage() {
     logoContainer: {
       display: 'flex',
       alignItems: 'center',
-      gap: 12
+      gap: 8
     },
     logoImage: {
-      width: isWide ? 40 : 32,
-      height: isWide ? 40 : 32,
+      width: isWide ? 52 : 40,
+      height: isWide ? 52 : 40,
       objectFit: 'contain'
     },
     logo: { 
       fontFamily: '"Poppins", system-ui, -apple-system, "Segoe UI", sans-serif',
       fontSize: isWide ? 32 : 24, 
       fontWeight: 700, 
-      color: DARK_TEXT,
+      color: '#2C3E50',
       letterSpacing: '-0.5px' 
     },
     navLinks: { 
@@ -136,7 +158,7 @@ export default function LandingPage() {
       alignItems: 'center', 
       flexDirection: isWide ? 'row' : 'column',
       position: 'relative',
-      zIndex: 80,
+      zIndex: 1,
       boxSizing: 'border-box'
     },
     left: { 
@@ -153,7 +175,17 @@ export default function LandingPage() {
       fontFamily: '"Poppins", sans-serif',
       textTransform: 'none',
       animation: 'fadeInUp 1s cubic-bezier(0.4, 0, 0.2, 1) forwards',
-    
+      cursor: 'pointer',
+      userSelect: 'none',
+      transformStyle: 'preserve-3d',
+      transition: 'transform 0.2s ease-out, text-shadow 0.2s ease',
+      textShadow: `
+        ${titleTransform.rotateY * 0.3}px ${titleTransform.rotateX * 0.3}px 8px rgba(44, 62, 80, 0.2),
+        ${titleTransform.rotateY * 0.6}px ${titleTransform.rotateX * 0.6}px 16px rgba(44, 62, 80, 0.15),
+        ${titleTransform.rotateY * 0.9}px ${titleTransform.rotateX * 0.9}px 24px rgba(44, 62, 80, 0.1)
+      `,
+      filter: 'drop-shadow(0 4px 12px rgba(44, 62, 80, 0.08))',
+      transform: `perspective(1200px) rotateX(${titleTransform.rotateX}deg) rotateY(${titleTransform.rotateY}deg) translateZ(20px)`
     },
     subtitle: { 
       marginTop: 32, 
@@ -169,86 +201,6 @@ export default function LandingPage() {
       display: 'flex', 
       justifyContent: isWide ? 'flex-end' : 'center',
       flexShrink: 0 
-    },
-    card: { 
-      width: isWide ? 440 : '100%', 
-      maxWidth: 440,
-      background: 'rgba(255, 255, 255, 0.15)', 
-      borderRadius: 28, 
-      padding: isWide ? 40 : 32, 
-      boxShadow: '0 25px 70px rgba(30, 58, 82, 0.18)',
-      backdropFilter: 'blur(20px)',
-      boxSizing: 'border-box',
-      border: '1px solid rgba(255, 255, 255, 0.3)'
-    },
-    cardTitle: { 
-      fontSize: isWide ? 26 : 22, 
-      fontWeight: 600, 
-      marginBottom: 28,
-      color: DARK_TEXT,
-      textAlign: 'left',
-      lineHeight: 1.3
-    },
-    inputWrapper: {
-      marginBottom: 22,
-      width: '100%'
-    },
-    inputLabel: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: 10,
-      marginBottom: 10,
-      fontSize: 15,
-      color: LIGHT_TEXT,
-      fontWeight: 500
-    },
-    inputIcon: {
-      fontSize: 19,
-      opacity: 0.7
-    },
-    input: (n) => ({ 
-      width: '100%', 
-      padding: '15px 18px', 
-      borderRadius: 14, 
-      border: '1px solid rgba(74, 95, 115, 0.25)', 
-      outline: 'none', 
-      boxShadow: focus === n ? '0 0 0 3px rgba(94, 146, 176, 0.12)' : 'none',
-      transition: 'all 0.2s',
-      fontSize: 16,
-      backgroundColor: '#fff',
-      color: DARK_TEXT,
-      fontFamily: 'inherit',
-      boxSizing: 'border-box'
-    }),
-    submit: { 
-      width: '100%', 
-      marginTop: 12, 
-      padding: '16px 18px', 
-      borderRadius: 14, 
-      border: 'none', 
-      background: BLUE_BUTTON, 
-      color: '#fff', 
-      fontWeight: 600, 
-      cursor: 'pointer',
-      fontSize: 17,
-      transition: 'all 0.2s',
-      boxShadow: '0 6px 16px rgba(94, 146, 176, 0.35)',
-      boxSizing: 'border-box'
-    },
-    signupLink: {
-      marginTop: 22,
-      textAlign: 'center',
-      fontSize: 15,
-      color: LIGHT_TEXT
-    },
-    linkButton: {
-      background: 'transparent',
-      border: 'none',
-      color: DARK_TEXT,
-      cursor: 'pointer',
-      textDecoration: 'underline',
-      fontWeight: 600,
-      fontSize: 15
     },
 
     // 3D shapes for background
@@ -481,7 +433,16 @@ export default function LandingPage() {
         <div style={styles.heroInner}>
           {/* Left Content */}
           <section style={styles.left} aria-labelledby="hero-title">
-            <h1 id="hero-title" style={styles.title}>Mimic</h1>
+            <h1 
+              id="hero-title" 
+              style={styles.title} 
+              className={titleAnimation}
+              onClick={handleTitleClick}
+              onMouseMove={handleTitleMouseMove}
+              onMouseLeave={handleTitleMouseLeave}
+            >
+              Mimic
+            </h1>
             <p style={styles.subtitle}>
               Visualize ideas in calming 3D scenes<br />
               built for neurodivergent thinkers.
@@ -506,54 +467,15 @@ export default function LandingPage() {
             </button>
           </section>
 
-          {/* Right Login Card */}
-          <aside style={styles.rightWrap} aria-labelledby="login-heading">
-            <form ref={loginRef} onSubmit={handleSubmit} style={styles.card} aria-label="Login form">
-              <h2 id="login-heading" style={styles.cardTitle}>Login to your space</h2>
-
-              <div style={styles.inputWrapper}>
-                <label htmlFor="id" style={styles.inputLabel}>
-                  <span style={styles.inputIcon}>✉</span>
-                  <span>Email or Username</span>
-                </label>
-                <input 
-                  id="id" 
-                  name="id" 
-                  value={form.id} 
-                  onChange={handleChange} 
-                  onFocus={() => setFocus('id')} 
-                  onBlur={() => setFocus(null)} 
-                  style={styles.input('id')} 
-                  required 
-                  placeholder="Enter your email"
-                />
-              </div>
-
-              <div style={styles.inputWrapper}>
-                <label htmlFor="password" style={styles.inputLabel}>
-                  <span style={styles.inputIcon}>🔒</span>
-                  <span>Password</span>
-                </label>
-                <input 
-                  id="password" 
-                  name="password" 
-                  type="password" 
-                  value={form.password} 
-                  onChange={handleChange} 
-                  onFocus={() => setFocus('password')} 
-                  onBlur={() => setFocus(null)} 
-                  style={styles.input('password')} 
-                  required 
-                  placeholder="Enter your password"
-                />
-              </div>
-
-              <button type="submit" style={styles.submit}>Login</button>
-
-              <div style={styles.signupLink}>
-                Don't have an account? <button type="button" style={styles.linkButton} onClick={() => scrollTo(aboutRef)}>Sign up</button>
-              </div>
-            </form>
+          {/* Right Login/Signup Flip Card */}
+          <aside style={styles.rightWrap} aria-labelledby="auth-card">
+            <AuthFlipCard 
+              isWide={isWide} 
+              DARK_TEXT={DARK_TEXT} 
+              LIGHT_TEXT={LIGHT_TEXT} 
+              BLUE_BUTTON={BLUE_BUTTON}
+              loginRef={loginRef}
+            />
           </aside>
         </div>
       </main>
