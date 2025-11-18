@@ -452,10 +452,7 @@ const handleVoiceRead = () => {
               disabled={currentStep <= 1}
               style={{
                 padding: '10px 20px',
-                background: currentStep <= 1 
-                ,
-                              background: "#4facfe", 
-
+                background: currentStep <= 1 ? '#ccc' : '#4facfe',
                 color: 'white',
                 border: 'none',
                 borderRadius: '30px',
@@ -475,9 +472,7 @@ const handleVoiceRead = () => {
               disabled={currentStep >= sceneData.sequence.length}
               style={{
                 padding: '10px 20px',
-                background: currentStep >= sceneData.sequence.length
-              ,
-              background: "#4facfe", 
+                background: currentStep >= sceneData.sequence.length ? '#ccc' : '#4facfe',
                 color: 'white',
                 border: 'none',
                 borderRadius: '30px',

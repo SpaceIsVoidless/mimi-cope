@@ -1,26 +1,90 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import './AuthFlipCard.css';
 
 export default function AuthFlipCard({ isWide, DARK_TEXT, LIGHT_TEXT, BLUE_BUTTON, loginRef }) {
+  const navigate = useNavigate();
+  const { login, signup } = useAuth();
+  
   const [isSignUp, setIsSignUp] = useState(false);
-  const [loginForm, setLoginForm] = useState({ id: '', password: '' });
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [signupForm, setSignupForm] = useState({ fullName: '', email: '', password: '', confirmPassword: '' });
   const [focus, setFocus] = useState(null);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleLoginChange = (e) => setLoginForm((s) => ({ ...s, [e.target.name]: e.target.value }));
   const handleSignupChange = (e) => setSignupForm((s) => ({ ...s, [e.target.name]: e.target.value }));
   
-  const handleLoginSubmit = (e) => { 
-    e.preventDefault(); 
-    console.log('login', loginForm); 
+  const handleLoginSubmit = async (e) => { 
+    e.preventDefault();
+    setErrorMessage('');
+    setLoading(true);
+    
+    try {
+      await login(loginForm.email, loginForm.password);
+      navigate('/mimic-dashboard');
+    } catch (error) {
+      console.error('Login error:', error);
+      setErrorMessage(getErrorMessage(error.code));
+    } finally {
+      setLoading(false);
+    }
   };
   
-  const handleSignupSubmit = (e) => { 
-    e.preventDefault(); 
-    console.log('signup', signupForm); 
+  const handleSignupSubmit = async (e) => { 
+    e.preventDefault();
+    setErrorMessage('');
+    
+    // Validate passwords match
+    if (signupForm.password !== signupForm.confirmPassword) {
+      setErrorMessage('Passwords do not match');
+      return;
+    }
+    
+    // Validate password length
+    if (signupForm.password.length < 6) {
+      setErrorMessage('Password must be at least 6 characters');
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      await signup(signupForm.email, signupForm.password, signupForm.fullName);
+      navigate('/mimic-dashboard');
+    } catch (error) {
+      console.error('Signup error:', error);
+      setErrorMessage(getErrorMessage(error.code));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper function to convert Firebase error codes to user-friendly messages
+  const getErrorMessage = (errorCode) => {
+    switch (errorCode) {
+      case 'auth/email-already-in-use':
+        return 'This email is already registered';
+      case 'auth/invalid-email':
+        return 'Invalid email address';
+      case 'auth/user-not-found':
+        return 'No account found with this email';
+      case 'auth/wrong-password':
+        return 'Incorrect password';
+      case 'auth/weak-password':
+        return 'Password should be at least 6 characters';
+      case 'auth/too-many-requests':
+        return 'Too many attempts. Please try again later';
+      case 'auth/network-request-failed':
+        return 'Network error. Please check your connection';
+      default:
+        return 'An error occurred. Please try again';
+    }
   };
 
   const inputStyle = (n) => ({ 
@@ -125,8 +189,9 @@ export default function AuthFlipCard({ isWide, DARK_TEXT, LIGHT_TEXT, BLUE_BUTTO
                 </svg>
                 <input 
                   id="login-id" 
-                  name="id" 
-                  value={loginForm.id} 
+                  name="email" 
+                  type="email"
+                  value={loginForm.email} 
                   onChange={handleLoginChange} 
                   onFocus={() => setFocus('login-id')} 
                   onBlur={() => setFocus(null)} 
@@ -178,14 +243,34 @@ export default function AuthFlipCard({ isWide, DARK_TEXT, LIGHT_TEXT, BLUE_BUTTO
               </div>
             </div>
 
-            <button type="submit" style={submitStyle}>Login</button>
+            <button type="submit" style={submitStyle} disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
+            </button>
+
+            {errorMessage && (
+              <div style={{
+                marginTop: 12,
+                padding: '12px',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: 8,
+                color: '#DC2626',
+                fontSize: 14,
+                textAlign: 'center'
+              }}>
+                {errorMessage}
+              </div>
+            )}
 
             <div style={signupLinkStyle}>
               Don't have an account?{' '}
               <button 
                 type="button" 
                 style={linkButtonStyle} 
-                onClick={() => setIsSignUp(true)}
+                onClick={() => {
+                  setIsSignUp(true);
+                  setErrorMessage('');
+                }}
               >
                 Sign up
               </button>
@@ -321,14 +406,34 @@ export default function AuthFlipCard({ isWide, DARK_TEXT, LIGHT_TEXT, BLUE_BUTTO
               </div>
             </div>
 
-            <button type="submit" style={submitStyle}>Sign up</button>
+            <button type="submit" style={submitStyle} disabled={loading}>
+              {loading ? 'Creating account...' : 'Sign up'}
+            </button>
+
+            {errorMessage && (
+              <div style={{
+                marginTop: 12,
+                padding: '12px',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: 8,
+                color: '#DC2626',
+                fontSize: 14,
+                textAlign: 'center'
+              }}>
+                {errorMessage}
+              </div>
+            )}
 
             <div style={signupLinkStyle}>
               Already have an account?{' '}
               <button 
                 type="button" 
                 style={linkButtonStyle} 
-                onClick={() => setIsSignUp(false)}
+                onClick={() => {
+                  setIsSignUp(false);
+                  setErrorMessage('');
+                }}
               >
                 Log in
               </button>
