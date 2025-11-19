@@ -28,6 +28,8 @@
    - Build Command: `cd client && npm install && npm run build`
    - Output Directory: `client/dist`
    - Install Command: `npm install`
+   
+   **Note:** For local development, you use `npm run dev`, but Vercel needs `npm run build` to create the production bundle.
 
 6. **Add Environment Variables:**
    Click "Environment Variables" and add these:
