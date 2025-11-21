@@ -6,10 +6,10 @@
   "scripts": {
     "start": "vite",
     "dev": "vite",
-    "build": "npx vite build",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "vercel-build": "npx vite build"
+    "vercel-build": "vite build"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
