@@ -1,6 +1,6 @@
 {
   "installCommand": "npm install",
-  "buildCommand": "npm run build",
+  "buildCommand": "PATH=$PATH:./node_modules/.bin npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
